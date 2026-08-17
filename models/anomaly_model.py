@@ -46,8 +46,8 @@ class RadioAnomalyDetector:
         preds = self.model.predict(frame)
         scores = self.model.decision_function(frame)
         return [
-            {"is_anomaly": int(p) == -1, "anomaly_score": float(s)}
-            for p, s in zip(preds, scores, strict=True)
+            {"is_anomaly": int(preds[i]) == -1, "anomaly_score": float(scores[i])}
+            for i in range(len(preds))
         ]
 
     def save(self, path: str) -> None:
