@@ -48,7 +48,8 @@ class BeamSelector:
 
     def feature_importances(self) -> dict[str, float]:
         """Return feature -> importance mapping from the fitted forest."""
-        return dict(zip(self.config.feature_columns, (float(v) for v in self.model.feature_importances_), strict=True))
+        importances = self.model.feature_importances_
+        return {col: float(importances[i]) for i, col in enumerate(self.config.feature_columns)}
 
     def predict(self, features: dict) -> int:
         sample = pd.DataFrame([features])[list(self.config.feature_columns)]
