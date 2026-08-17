@@ -2,27 +2,40 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import json
+from datetime import datetime, timezone
+from pathlib import Path
+
 import pandas as pd
 
 from data.generator import SyntheticRANDataGenerator
 from models.anomaly_model import RadioAnomalyDetector
 from models.beam_model import BeamSelector
 from models.qos_model import QoSPredictor
+from ran6g.config import get_paths
+from ran6g.logging_utils import get_logger
+
+logger = get_logger("ran6g.trainer")
 
 
-def train_all(data_path: str = "data/sample_dataset.csv", model_dir: str = "outputs/models") -> dict:
-    """Train all models and persist artifacts."""
-    data_file = Path(data_path)
-    model_path = Path(model_dir)
+def train_all(data_path: str | Path | None = None, model_dir: str | Path | None = None) -> dict:
+    """Train all models and persist artifacts.
+
+    ``data_path`` and ``model_dir`` default to the project-configured
+    locations (overridable via ``RAN6G_*`` environment variables).
+    """
+    paths = get_paths()
+    data_file = Path(data_path) if data_path is not None else paths.data_path
+    model_path = Path(model_dir) if model_dir is not None else paths.model_dir
     model_path.mkdir(parents=True, exist_ok=True)
 
     if not data_file.exists():
+        logger.info("Dataset not found at %s; generating synthetic data.", data_file)
         generator = SyntheticRANDataGenerator()
         generator.to_csv(data_file)
 
     df = pd.read_csv(data_file)
+    logger.info("Loaded %d rows for training.", len(df))
 
     qos_model = QoSPredictor()
     qos_report = qos_model.train(df)
@@ -37,17 +50,32 @@ def train_all(data_path: str = "data/sample_dataset.csv", model_dir: str = "outp
     anomaly_model.save(str(model_path / "anomaly_model.joblib"))
 
     metrics = {
+        "metadata": {
+            "trained_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "num_rows": int(len(df)),
+            "data_path": str(data_file),
+        },
         "qos_model": {
             "accuracy": qos_report["accuracy"],
             "macro_f1": qos_report["macro avg"]["f1-score"],
+            "per_class_f1": {
+                cls: qos_report[cls]["f1-score"]
+                for cls in ("good", "medium", "poor")
+                if cls in qos_report
+            },
+            "feature_importances": qos_model.feature_importances(),
         },
-        "beam_model": beam_metrics,
+        "beam_model": {
+            **beam_metrics,
+            "feature_importances": beam_model.feature_importances(),
+        },
         "anomaly_model": {"status": "trained"},
     }
 
     with open(model_path / "training_metrics.json", "w", encoding="utf-8") as handle:
         json.dump(metrics, handle, indent=2)
 
+    logger.info("Training complete. Artifacts saved to %s", model_path)
     return metrics
 
 

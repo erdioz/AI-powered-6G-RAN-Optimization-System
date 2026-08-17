@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import joblib
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -37,18 +38,26 @@ class QoSPredictor:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
         self.model.fit(X_train, y_train)
         predictions = self.model.predict(X_test)
-        report = classification_report(y_test, predictions, output_dict=True)
-        return report
+        return classification_report(y_test, predictions, output_dict=True, zero_division=0)
+
+    def feature_importances(self) -> dict[str, float]:
+        """Return feature -> importance mapping from the fitted forest."""
+        return dict(zip(self.config.feature_columns, (float(v) for v in self.model.feature_importances_), strict=True))
 
     def predict(self, features: dict) -> str:
         sample = pd.DataFrame([features])[list(self.config.feature_columns)]
         return str(self.model.predict(sample)[0])
 
+    def predict_batch(self, rows: list[dict]) -> list[str]:
+        """Vectorized prediction over many feature rows in a single call."""
+        frame = pd.DataFrame(rows)[list(self.config.feature_columns)]
+        return [str(v) for v in self.model.predict(frame)]
+
     def save(self, path: str) -> None:
         joblib.dump({"model": self.model, "config": self.config}, path)
 
     @classmethod
-    def load(cls, path: str) -> "QoSPredictor":
+    def load(cls, path: str) -> QoSPredictor:
         payload = joblib.load(path)
         instance = cls(config=payload["config"])
         instance.model = payload["model"]

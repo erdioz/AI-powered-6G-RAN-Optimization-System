@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import joblib
 import pandas as pd
 from sklearn.ensemble import IsolationForest
@@ -39,11 +40,21 @@ class RadioAnomalyDetector:
         score = float(self.model.decision_function(sample)[0])
         return {"is_anomaly": pred == -1, "anomaly_score": score}
 
+    def predict_batch(self, rows: list[dict]) -> list[dict]:
+        """Vectorized prediction over many feature rows in a single call."""
+        frame = pd.DataFrame(rows)[list(self.config.feature_columns)]
+        preds = self.model.predict(frame)
+        scores = self.model.decision_function(frame)
+        return [
+            {"is_anomaly": int(p) == -1, "anomaly_score": float(s)}
+            for p, s in zip(preds, scores, strict=True)
+        ]
+
     def save(self, path: str) -> None:
         joblib.dump({"model": self.model, "config": self.config}, path)
 
     @classmethod
-    def load(cls, path: str) -> "RadioAnomalyDetector":
+    def load(cls, path: str) -> RadioAnomalyDetector:
         payload = joblib.load(path)
         instance = cls(config=payload["config"])
         instance.model = payload["model"]

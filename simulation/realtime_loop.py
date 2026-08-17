@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import time
 
-import pandas as pd
-
-from data.generator import SyntheticRANDataGenerator, GenerationConfig
+from data.generator import GenerationConfig, SyntheticRANDataGenerator
 from pipeline.inference import RANInferenceService
 from pipeline.trainer import train_all
 
@@ -21,7 +19,7 @@ def run_realtime_demo(steps: int = 10, sleep_s: float = 0.2) -> None:
         sample = t_df.iloc[0].to_dict()
 
         qos_input = {k: sample[k] for k in ["rsrp", "sinr", "cqi", "distance_to_cell", "beam_index", "interference_level", "speed"]}
-        beam_input = {k: sample[k] for k in ["x", "y", "speed", "distance_to_cell", "rsrp", "sinr", "cqi", "interference_level", "cell_id"]}
+        beam_input = {k: sample[k] for k in ["x", "y", "speed", "distance_to_cell", "azimuth_to_cell", "rsrp", "sinr", "cqi", "interference_level", "cell_id"]}
         anomaly_input = {k: sample[k] for k in ["rsrp", "sinr", "cqi", "interference_level", "distance_to_cell", "speed", "throughput_mbps", "latency_ms"]}
 
         qos_pred = service.predict_qos(qos_input)

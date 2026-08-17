@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
@@ -50,6 +51,11 @@ class SyntheticRANDataGenerator:
                 state = self.mobility.step(user)
                 serving_bs, dist_m = self.environment.nearest_cell(state.x, state.y)
 
+                # Angle-of-departure from the serving cell to the UE. The optimal
+                # beam is a direct function of this azimuth, so exposing it as a
+                # feature lets the beam selector learn the true decision boundary.
+                azimuth_to_cell = float(np.arctan2(state.y - serving_bs.y, state.x - serving_bs.x))
+
                 optimal_beam = self.environment.optimal_beam(state.x, state.y, serving_bs)
                 explored_beam = int((optimal_beam + self.rng.integers(-1, 2)) % self.config.num_beams)
 
@@ -80,6 +86,7 @@ class SyntheticRANDataGenerator:
                         "y": state.y,
                         "speed": state.speed_mps,
                         "distance_to_cell": dist_m,
+                        "azimuth_to_cell": azimuth_to_cell,
                         "beam_index": explored_beam,
                         "optimal_beam_index": optimal_beam,
                         "beam_gain_db": beam_gain,
