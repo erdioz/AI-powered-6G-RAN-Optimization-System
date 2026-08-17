@@ -191,10 +191,15 @@ The image trains the models at build time so the container starts ready to serve
 
 `visualization/plots.py` provides:
 
-- UE movement trajectory
+- UE movement trajectory over the cell layout — cell sites, color-coded beam
+  sectors per site, and the UE track colored by its optimal serving beam
 - SINR over time
 - Selected vs optimal beam indices
 - Anomaly scatter plot
+
+Cell-site positions and the beam-sector geometry are recovered directly from the
+dataset (from `distance_to_cell` and `azimuth_to_cell`), so the map needs only
+the dataframe.
 
 Example:
 
