@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import joblib
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -48,7 +49,7 @@ class QoSPredictor:
         joblib.dump({"model": self.model, "config": self.config}, path)
 
     @classmethod
-    def load(cls, path: str) -> "QoSPredictor":
+    def load(cls, path: str) -> QoSPredictor:
         payload = joblib.load(path)
         instance = cls(config=payload["config"])
         instance.model = payload["model"]

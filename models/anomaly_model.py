@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import joblib
 import pandas as pd
 from sklearn.ensemble import IsolationForest
@@ -43,7 +44,7 @@ class RadioAnomalyDetector:
         joblib.dump({"model": self.model, "config": self.config}, path)
 
     @classmethod
-    def load(cls, path: str) -> "RadioAnomalyDetector":
+    def load(cls, path: str) -> RadioAnomalyDetector:
         payload = joblib.load(path)
         instance = cls(config=payload["config"])
         instance.model = payload["model"]

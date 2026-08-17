@@ -7,13 +7,14 @@ from pathlib import Path
 from models.anomaly_model import RadioAnomalyDetector
 from models.beam_model import BeamSelector
 from models.qos_model import QoSPredictor
+from ran6g.config import get_paths
 
 
 class RANInferenceService:
     """Load model artifacts and provide single-call prediction APIs."""
 
-    def __init__(self, model_dir: str = "outputs/models") -> None:
-        model_path = Path(model_dir)
+    def __init__(self, model_dir: str | Path | None = None) -> None:
+        model_path = Path(model_dir) if model_dir is not None else get_paths().model_dir
         self.qos = QoSPredictor.load(str(model_path / "qos_model.joblib"))
         self.beam = BeamSelector.load(str(model_path / "beam_model.joblib"))
         self.anomaly = RadioAnomalyDetector.load(str(model_path / "anomaly_model.joblib"))

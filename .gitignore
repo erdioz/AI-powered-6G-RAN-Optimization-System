@@ -1,0 +1,36 @@
+# Byte-compiled / optimized / cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Project outputs (generated model + plot artifacts)
+outputs/
+!outputs/.gitkeep
+
+# Trained model artifacts (may appear outside outputs/)
+*.joblib
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store

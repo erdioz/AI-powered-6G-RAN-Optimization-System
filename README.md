@@ -8,6 +8,8 @@ A lightweight, modular Python project for simulating a 6G-like Radio Access Netw
 
 The solution is synthetic-data driven and **Google Colab-compatible**.
 
+Tested on Python 3.10–3.12, with a pytest suite, ruff linting, and CI on every push/PR.
+
 ---
 
 ## Project Structure
@@ -182,9 +184,64 @@ python -m simulation.realtime_loop
 
 ## Installation
 
+Runtime only:
+
 ```bash
 pip install -r requirements.txt
 ```
+
+Editable install with dev tools (pytest, ruff), recommended for development:
+
+```bash
+pip install -e ".[dev]"
+# or:
+./scripts/setup.sh
+```
+
+---
+
+## Command-line interface
+
+Installing the package exposes a `ran6g` console command:
+
+```bash
+ran6g generate            # write the synthetic dataset CSV
+ran6g train               # train all models and print metrics
+ran6g realtime --steps 15 # run the online inference demo
+ran6g serve --port 8000   # launch the FastAPI server
+```
+
+### Configuration via environment variables
+
+Filesystem locations are resolved from the project root but can be overridden so
+the same code runs unchanged in Colab, containers, and CI:
+
+| Variable            | Default                         | Purpose                     |
+|---------------------|---------------------------------|-----------------------------|
+| `RAN6G_DATA_PATH`   | `data/sample_dataset.csv`       | Synthetic dataset location  |
+| `RAN6G_MODEL_DIR`   | `outputs/models`                | Trained model artifacts     |
+| `RAN6G_PLOT_DIR`    | `outputs/plots`                 | Generated plots             |
+| `RAN6G_LOG_LEVEL`   | `INFO`                          | Logging verbosity           |
+
+---
+
+## Development
+
+Common workflows are wrapped in a `Makefile`:
+
+```bash
+make install-dev   # editable install with dev extras
+make test          # run the pytest suite
+make cov           # tests with a coverage report
+make lint          # ruff lint checks
+make format        # auto-format and fix with ruff
+```
+
+The test suite lives in `tests/` and covers the radio-channel physics, mobility,
+the RAN environment, all three models (train/predict/save/load), the training and
+inference pipelines, and the FastAPI endpoints. Continuous integration
+(`.github/workflows/ci.yml`) runs ruff and the test suite across Python 3.10–3.12
+on every push and pull request.
 
 ---
 

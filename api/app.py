@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from pipeline.inference import RANInferenceService
 from pipeline.trainer import train_all
+from ran6g.config import get_paths
+from ran6g.logging_utils import get_logger
+
+logger = get_logger("ran6g.api")
 
 
 class QoSInput(BaseModel):
@@ -45,16 +48,26 @@ class AnomalyInput(BaseModel):
 
 app = FastAPI(title="AI-powered 6G RAN Optimization API", version="1.0.0")
 
-model_dir = Path("outputs/models")
+model_dir = get_paths().model_dir
 if not model_dir.exists() or not (model_dir / "qos_model.joblib").exists():
+    logger.info("Model artifacts missing at %s; training on startup.", model_dir)
     train_all()
 
-service = RANInferenceService(model_dir=str(model_dir))
+service = RANInferenceService(model_dir=model_dir)
 
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok"}
+    """Report service liveness and which model artifacts are loaded."""
+    return {
+        "status": "ok",
+        "model_dir": str(model_dir),
+        "models_loaded": {
+            "qos": service.qos is not None,
+            "beam": service.beam is not None,
+            "anomaly": service.anomaly is not None,
+        },
+    }
 
 
 @app.post("/predict_qos")

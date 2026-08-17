@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import time
 
-import pandas as pd
-
-from data.generator import SyntheticRANDataGenerator, GenerationConfig
+from data.generator import GenerationConfig, SyntheticRANDataGenerator
 from pipeline.inference import RANInferenceService
 from pipeline.trainer import train_all
 
