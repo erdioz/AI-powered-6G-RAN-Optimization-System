@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -49,11 +50,25 @@ def train_all(data_path: str | Path | None = None, model_dir: str | Path | None 
     anomaly_model.save(str(model_path / "anomaly_model.joblib"))
 
     metrics = {
+        "metadata": {
+            "trained_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "num_rows": int(len(df)),
+            "data_path": str(data_file),
+        },
         "qos_model": {
             "accuracy": qos_report["accuracy"],
             "macro_f1": qos_report["macro avg"]["f1-score"],
+            "per_class_f1": {
+                cls: qos_report[cls]["f1-score"]
+                for cls in ("good", "medium", "poor")
+                if cls in qos_report
+            },
+            "feature_importances": qos_model.feature_importances(),
         },
-        "beam_model": beam_metrics,
+        "beam_model": {
+            **beam_metrics,
+            "feature_importances": beam_model.feature_importances(),
+        },
         "anomaly_model": {"status": "trained"},
     }
 

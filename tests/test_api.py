@@ -75,7 +75,8 @@ def test_select_beam(client) -> None:
     row = df.iloc[0]
     payload = {
         "x": float(row["x"]), "y": float(row["y"]), "speed": float(row["speed"]),
-        "distance_to_cell": float(row["distance_to_cell"]), "rsrp": float(row["rsrp"]),
+        "distance_to_cell": float(row["distance_to_cell"]),
+        "azimuth_to_cell": float(row["azimuth_to_cell"]), "rsrp": float(row["rsrp"]),
         "sinr": float(row["sinr"]), "cqi": int(row["cqi"]),
         "interference_level": float(row["interference_level"]), "cell_id": int(row["cell_id"]),
     }

@@ -8,9 +8,9 @@ from data.generator import GenerationConfig, SyntheticRANDataGenerator
 
 EXPECTED_COLUMNS = {
     "time_step", "user_id", "cell_id", "x", "y", "speed", "distance_to_cell",
-    "beam_index", "optimal_beam_index", "beam_gain_db", "rsrp", "sinr", "cqi",
-    "interference_level", "noise_floor", "latency_ms", "throughput_mbps",
-    "qos_class", "is_anomaly",
+    "azimuth_to_cell", "beam_index", "optimal_beam_index", "beam_gain_db", "rsrp",
+    "sinr", "cqi", "interference_level", "noise_floor", "latency_ms",
+    "throughput_mbps", "qos_class", "is_anomaly",
 }
 
 

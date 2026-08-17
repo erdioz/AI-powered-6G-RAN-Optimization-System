@@ -28,6 +28,7 @@ class BeamInput(BaseModel):
     y: float
     speed: float
     distance_to_cell: float
+    azimuth_to_cell: float
     rsrp: float
     sinr: float
     cqi: int

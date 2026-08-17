@@ -27,6 +27,13 @@ def test_train_all_produces_artifacts_and_metrics(tmp_path, sample_df: pd.DataFr
     saved = json.loads((model_dir / "training_metrics.json").read_text())
     assert saved["qos_model"]["accuracy"] == metrics["qos_model"]["accuracy"]
     assert "accuracy" in metrics["beam_model"]
+    assert "macro_f1" in metrics["beam_model"]
+
+    # Metadata and introspection surfaces added in the correctness milestone.
+    assert metrics["metadata"]["num_rows"] > 0
+    assert "trained_at" in metrics["metadata"]
+    assert "azimuth_to_cell" in metrics["beam_model"]["feature_importances"]
+    assert metrics["qos_model"]["per_class_f1"]  # non-empty
 
 
 def test_train_all_generates_data_when_missing(tmp_path) -> None:

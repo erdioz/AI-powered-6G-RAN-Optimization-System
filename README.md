@@ -52,7 +52,7 @@ AI-powered-6G-RAN-Optimization-System/
 `data/generator.py` creates a time-series dataset containing:
 
 - UE state: `user_id`, `x`, `y`, `speed`
-- Serving cell info: `cell_id`, `distance_to_cell`
+- Serving cell info: `cell_id`, `distance_to_cell`, `azimuth_to_cell`
 - Radio metrics: `RSRP`, `SINR`, `CQI`, `interference_level`, `noise_floor`
 - Beam fields: `beam_index`, `optimal_beam_index`, `beam_gain_db`
 - QoS outcomes: `qos_class`, `latency_ms`, `throughput_mbps`
@@ -83,11 +83,24 @@ This writes `data/sample_dataset.csv`.
 - Input features: `rsrp, sinr, cqi, distance_to_cell, beam_index, interference_level, speed`
 - Output: `qos_class`
 
+> **Note on QoS accuracy.** In the synthetic dataset `qos_class` is defined as a
+> threshold on SINR (`RadioChannel.qos_class_from_sinr`), and SINR is itself a
+> feature. The task is therefore *near-deterministic* and the model reaches ~100%
+> accuracy — this is expected, not overfitting. The training report includes
+> per-class F1 and feature importances so this relationship is transparent. To
+> make QoS a genuinely harder learning problem, redefine the label as a function
+> of latency/throughput/noise rather than SINR alone.
+
 ### Beam Selection
 - File: `models/beam_model.py`
 - Model: `RandomForestClassifier` (multi-class)
-- Input features: `radio metrics + UE position + cell_id`
+- Input features: `UE position + azimuth_to_cell + radio metrics + cell_id`
 - Output: `optimal_beam_index`
+
+> The optimal beam is physically the beam whose boresight best aligns with the
+> **angle-of-departure from the serving cell** to the UE. Exposing that angle as
+> the `azimuth_to_cell` feature raises beam-selection accuracy from ~0.18 to
+> ~0.99, and it dominates the feature-importance ranking as expected.
 
 ### Anomaly Detection
 - File: `models/anomaly_model.py`
