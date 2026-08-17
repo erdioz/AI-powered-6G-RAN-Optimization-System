@@ -27,3 +27,12 @@ class RANInferenceService:
 
     def detect_anomaly(self, payload: dict) -> dict:
         return self.anomaly.predict(payload)
+
+    def predict_qos_batch(self, payloads: list[dict]) -> list[dict]:
+        return [{"qos_class": c} for c in self.qos.predict_batch(payloads)]
+
+    def select_beam_batch(self, payloads: list[dict]) -> list[dict]:
+        return [{"optimal_beam_index": b} for b in self.beam.predict_batch(payloads)]
+
+    def detect_anomaly_batch(self, payloads: list[dict]) -> list[dict]:
+        return self.anomaly.predict_batch(payloads)

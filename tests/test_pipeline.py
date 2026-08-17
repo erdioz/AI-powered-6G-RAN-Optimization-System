@@ -56,3 +56,16 @@ def test_inference_service_end_to_end(tmp_path, sample_df: pd.DataFrame) -> None
     assert qos["qos_class"] in {"good", "medium", "poor"}
     assert isinstance(beam["optimal_beam_index"], int)
     assert isinstance(anomaly["is_anomaly"], bool)
+
+
+def test_inference_batch_matches_single(tmp_path, sample_df: pd.DataFrame) -> None:
+    _, model_dir, _ = _train_into(tmp_path, sample_df)
+    service = RANInferenceService(model_dir=model_dir)
+
+    rows = [sample_df.iloc[i].to_dict() for i in range(5)]
+    qos_rows = [{k: r[k] for k in service.qos.config.feature_columns} for r in rows]
+
+    batch = service.predict_qos_batch(qos_rows)
+    singles = [service.predict_qos(r) for r in qos_rows]
+    assert batch == singles
+    assert len(batch) == 5

@@ -54,6 +54,11 @@ class BeamSelector:
         sample = pd.DataFrame([features])[list(self.config.feature_columns)]
         return int(self.model.predict(sample)[0])
 
+    def predict_batch(self, rows: list[dict]) -> list[int]:
+        """Vectorized prediction over many feature rows in a single call."""
+        frame = pd.DataFrame(rows)[list(self.config.feature_columns)]
+        return [int(v) for v in self.model.predict(frame)]
+
     def save(self, path: str) -> None:
         joblib.dump({"model": self.model, "config": self.config}, path)
 

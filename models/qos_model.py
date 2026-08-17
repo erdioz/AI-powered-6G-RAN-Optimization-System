@@ -48,6 +48,11 @@ class QoSPredictor:
         sample = pd.DataFrame([features])[list(self.config.feature_columns)]
         return str(self.model.predict(sample)[0])
 
+    def predict_batch(self, rows: list[dict]) -> list[str]:
+        """Vectorized prediction over many feature rows in a single call."""
+        frame = pd.DataFrame(rows)[list(self.config.feature_columns)]
+        return [str(v) for v in self.model.predict(frame)]
+
     def save(self, path: str) -> None:
         joblib.dump({"model": self.model, "config": self.config}, path)
 

@@ -17,7 +17,8 @@ Tested on Python 3.10–3.12, with a pytest suite, ruff linting, and CI on every
 ```text
 AI-powered-6G-RAN-Optimization-System/
 ├── api/
-│   └── app.py
+│   ├── app.py            # FastAPI app (lifespan loading, single + batch endpoints)
+│   └── metrics.py        # in-process request metrics
 ├── data/
 │   ├── generator.py
 │   ├── radio_channel.py
@@ -26,8 +27,6 @@ AI-powered-6G-RAN-Optimization-System/
 │   ├── anomaly_model.py
 │   ├── beam_model.py
 │   └── qos_model.py
-├── notebooks/
-│   └── 6g_ran_colab_demo.ipynb
 ├── pipeline/
 │   ├── inference.py
 │   └── trainer.py
@@ -36,14 +35,24 @@ AI-powered-6G-RAN-Optimization-System/
 │   ├── mobility.py
 │   ├── ran_environment.py
 │   └── realtime_loop.py
+├── ran6g/                # config (paths), logging, and the `ran6g` CLI
 ├── visualization/
 │   └── plots.py
-├── outputs/
-│   ├── models/
-│   └── plots/
+├── tests/                # pytest suite (~81% coverage)
+├── docs/architecture.md  # component + data-flow diagram
+├── notebooks/
+│   └── 6g_ran_colab_demo.ipynb
+├── outputs/              # generated model + plot artifacts (gitignored)
+├── Dockerfile
+├── docker-compose.yml
+├── Makefile
+├── pyproject.toml
 ├── requirements.txt
 └── README.md
 ```
+
+See [`docs/architecture.md`](docs/architecture.md) for a component and data-flow
+diagram.
 
 ---
 
@@ -133,16 +142,48 @@ service = RANInferenceService()
 Start server:
 
 ```bash
-uvicorn api.app:app --reload
+ran6g serve --reload        # or: uvicorn api.app:app --reload
 ```
 
-Endpoints:
+Models are loaded once during the application **lifespan** (not at import time);
+if no artifacts are found they are trained on startup.
+
+**Prediction endpoints** (single item):
 
 - `POST /predict_qos`
 - `POST /select_beam`
 - `POST /detect_anomaly`
 
-Each endpoint accepts JSON input and returns model predictions.
+**Batch endpoints** (accept a JSON list, vectorized, up to 1024 items):
+
+- `POST /predict_qos/batch`
+- `POST /select_beam/batch`
+- `POST /detect_anomaly/batch`
+
+**Operational endpoints:**
+
+- `GET /health` — liveness and which models are loaded
+- `GET /model_info` — training metrics/metadata of the loaded models
+- `GET /metrics` — in-process request counts, errors, and average latency
+
+Inputs are validated by pydantic (e.g. `cqi` must be `0–15`). Interactive docs
+are available at `/docs` when the server is running. Example:
+
+```bash
+curl -X POST http://127.0.0.1:8000/predict_qos \
+  -H 'Content-Type: application/json' \
+  -d '{"rsrp":-70,"sinr":12.5,"cqi":10,"distance_to_cell":250,"beam_index":3,"interference_level":-100,"speed":5}'
+```
+
+### Docker
+
+```bash
+docker compose up --build        # serves on http://127.0.0.1:8000
+# or:
+docker build -t ran6g-optimizer . && docker run -p 8000:8000 ran6g-optimizer
+```
+
+The image trains the models at build time so the container starts ready to serve.
 
 ---
 
